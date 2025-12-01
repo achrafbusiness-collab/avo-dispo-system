@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto mt-10">
+  <h1 class="text-3xl font-bold mb-6 text-gray-800">➕ Neuer Auftrag</h1>
+
+  <form action="/create-order" method="post" class="space-y-8">
+
+    <!-- ALLGEMEIN -->
+    <div class="card p-6">
+      <h2 class="text-xl font-semibold mb-4 text-blue-600">Allgemeine Informationen</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium">MV-Nr. / Referenznummer</label>
+          <input name="mv_nr" class="w-full border rounded-lg p-2" placeholder="z. B. 12345-MV" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Auftraggeber</label>
+          <input name="auftraggeber" class="w-full border rounded-lg p-2" placeholder="Firma oder Kunde" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Kennzeichen</label>
+          <input name="kennzeichen" class="w-full border rounded-lg p-2" placeholder="z. B. D-AV 1234" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Modell</label>
+          <input name="modell" class="w-full border rounded-lg p-2" placeholder="z. B. VW Passat 2.0 TDI" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">FIN</label>
+          <input name="fin" class="w-full border rounded-lg p-2" placeholder="z. B. WVWZZZ3CZEE123456" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium">Infofeld</label>
+          <textarea name="infofeld" class="w-full border rounded-lg p-2 h-24" placeholder="Besondere Hinweise oder Zusatzinfos..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABHOLUNG -->
+    <div class="card p-6">
+      <h2 class="text-xl font-semibold mb-4 text-blue-600">Abholort</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium">Stadt</label><input name="abhol_stadt" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">Straße</label><input name="abhol_strasse" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">Nr.</label><input name="abhol_str_nr" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">PLZ</label><input name="abhol_plz" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">Kontakt Abholung</label><input name="kontakt_abholung" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">Ansprechpartner Abholung</label><input name="ap_abholung" class="w-full border rounded-lg p-2" /></div>
+        <div>
+          <label class="block text-sm font-medium">Abholdatum</label>
+          <input type="date" name="abholdatum" class="w-full border rounded-lg p-2" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-sm font-medium">Uhrzeit von</label>
+            <input type="time" name="abhol_von" class="w-full border rounded-lg p-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Uhrzeit bis</label>
+            <input type="time" name="abhol_bis" class="w-full border rounded-lg p-2" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANLIEFERUNG -->
+    <div class="card p-6">
+      <h2 class="text-xl font-semibold mb-4 text-blue-600">Anlieferort</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium">Stadt</label><input name="anliefer_stadt" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">Straße</label><input name="anliefer_strasse" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">Nr.</label><input name="anliefer_str_nr" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">PLZ</label><input name="anliefer_plz" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">Kontakt Anlieferung</label><input name="kontakt_anlieferung" class="w-full border rounded-lg p-2" /></div>
+        <div><label class="block text-sm font-medium">Ansprechpartner Anlieferung</label><input name="ap_anlieferung" class="w-full border rounded-lg p-2" /></div>
+        <div>
+          <label class="block text-sm font-medium">Anlieferdatum</label>
+          <input type="date" name="anlieferdatum" class="w-full border rounded-lg p-2" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-sm font-medium">Uhrzeit von</label>
+            <input type="time" name="anliefer_von" class="w-full border rounded-lg p-2" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium">Uhrzeit bis</label>
+            <input type="time" name="anliefer_bis" class="w-full border rounded-lg p-2" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREISE -->
+    <div class="card p-6">
+      <h2 class="text-xl font-semibold mb-4 text-blue-600">Preis & Distanz</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium">Kilometer</label>
+          <input name="kilometer" type="number" step="0.1" class="w-full border rounded-lg p-2" placeholder="z. B. 430" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Preis (€)</label>
+          <input name="preis" type="number" step="0.01" class="w-full border rounded-lg p-2" placeholder="Kundenpreis" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Preis Selbstständiger (€)</label>
+          <input name="preis_selbstst" type="number" step="0.01" class="w-full border rounded-lg p-2" placeholder="Fahreranteil" />
+        </div>
+      </div>
+    </div>
+
+    <!-- FAHRER -->
+    <div class="card p-6">
+      <h2 class="text-xl font-semibold mb-4 text-blue-600">Disposition</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium">Fahrer / Auftragnehmer</label>
+          <select name="fahrer_id" class="w-full border rounded-lg p-2 bg-white">
+            <option value="">— Fahrer auswählen —</option>
+            {% for d in drivers %}
+            <option value="{{ d.id }}">{{ d.display_name() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="flex justify-end gap-4">
+      <a href="/orders" class="px-5 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-gray-800">Abbrechen</a>
+      <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">💾 Auftrag speichern</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

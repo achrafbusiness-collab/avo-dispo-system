@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto mt-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">📨 Import-Center</h1>
+    <div class="space-x-3">
+      <button id="fetch-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
+        🔄 Neue E-Mails abrufen & analysieren
+      </button>
+    </div>
+  </div>
+
+  {% if imports|length == 0 %}
+    <div class="text-gray-500 italic">Keine importierten E-Mails gefunden.</div>
+  {% else %}
+  <div class="overflow-x-auto card p-4">
+    <table class="min-w-full text-sm text-left text-gray-700">
+      <thead class="border-b font-semibold">
+        <tr>
+          <th class="py-2">ID</th>
+          <th>Betreff</th>
+          <th>Absender</th>
+          <th>Empfangen am</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in imports %}
+        <tr class="border-b hover:bg-gray-50">
+          <td class="py-2 text-gray-500">{{ i.id }}</td>
+          <td class="truncate max-w-xs">{{ i.subject }}</td>
+          <td class="text-gray-500">{{ i.sender }}</td>
+          <td>{{ i.received_at }}</td>
+          <td class="space-x-2">
+            <a href="/import/{{ i.id }}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-xs">Prüfen</a>
+            <button onclick="discardImport({{ i.id }})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-xs">Verwerfen</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+document.getElementById('fetch-btn').addEventListener('click', async () => {
+  if (!confirm("Neue E-Mails vom Server abrufen und analysieren?")) return;
+  const btn = document.getElementById('fetch-btn');
+  btn.disabled = true;
+  btn.innerText = "⏳ Analysiere E-Mails...";
+  const res = await fetch('/api/import/fetch');
+  const data = await res.json();
+  if (data.status === "ok" && data.created.length > 0) {
+    alert(`✅ ${data.created.length} neue importierte Aufträge gefunden!`);
+    location.reload();
+  } else if (data.status === "auth_error") {
+    alert("❌ E-Mail-Login fehlgeschlagen – bitte IMAP-Daten prüfen.");
+  } else {
+    alert("Keine neuen E-Mails gefunden.");
+  }
+  btn.disabled = false;
+  btn.innerText = "🔄 Neue E-Mails abrufen & analysieren";
+});
+
+async function discardImport(id) {
+  if (!confirm("Import wirklich verwerfen?")) return;
+  const res = await fetch(`/api/import/discard/${id}`, { method: "POST" });
+  const data = await res.json();
+  if (data.status === "ok") {
+    alert("🗑️ Import gelöscht.");
+    location.reload();
+  } else {
+    alert("❌ Fehler: " + data.message);
+  }
+}
+</script>
+{% endblock %}

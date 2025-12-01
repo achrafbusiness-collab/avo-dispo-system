@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title or "AVO Logistics Dispo AI" }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="/static/logo.png" />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f9fafb;
+        color: #111827;
+      }
+      .sidebar {
+        width: 250px;
+        min-height: 100vh;
+        background-color: #ffffff;
+        border-right: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+      }
+      .sidebar a {
+        color: #374151;
+        transition: all 0.3s;
+        font-weight: 500;
+      }
+      .sidebar a:hover {
+        color: #00a3ff;
+        transform: translateX(3px);
+      }
+      .active-link {
+        color: #00a3ff !important;
+        font-weight: 700;
+      }
+      .content {
+        margin-left: 250px;
+        padding: 2rem;
+      }
+      .card {
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+
+  <body class="flex">
+    <!-- SIDEBAR -->
+    <aside class="sidebar fixed left-0 top-0">
+      <div>
+        <!-- Logo -->
+        <div class="flex flex-col items-center py-6 border-b border-gray-200">
+          <img src="/static/logo.png" alt="AVO Logo" class="h-16 mb-2" />
+          <h1 class="text-lg font-extrabold text-gray-800 tracking-wide">AVO LOGISTICS</h1>
+          <p class="text-xs text-gray-400 -mt-1">Disposition mit KI 🚀</p>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex flex-col mt-6 space-y-4 px-6 text-sm">
+          <a href="/dashboard" class="nav-link">🏠 Dashboard</a>
+          <a href="/orders" class="nav-link">📦 Aufträge</a>
+          <a href="/drivers" class="nav-link">👨‍✈️ Fahrer</a>
+          <a href="/orders/new" class="nav-link">➕ Neuer Auftrag</a>
+          <hr class="my-3 border-gray-200" />
+          <a href="/import" class="nav-link font-semibold text-gray-800">📨 Import-Center</a>
+        </nav>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-6 border-t border-gray-200 text-gray-500 text-xs text-center">
+        © {{ 2025 }} <span class="font-bold text-black">AVO Logistics</span><br />
+        KI-gestützte Disposition 🤖
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content flex-1 bg-gray-50 min-h-screen">
+      {% block content %}
+      {% endblock %}
+    </main>
+
+    <!-- Script für aktiven Menüpunkt -->
+    <script>
+      const currentPath = window.location.pathname;
+      document.querySelectorAll(".nav-link").forEach(link => {
+        if (link.getAttribute("href") === currentPath) {
+          link.classList.add("active-link");
+        }
+      });
+    </script>
+  </body>
+</html>

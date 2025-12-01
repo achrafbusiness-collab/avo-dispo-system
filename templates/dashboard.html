@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-extrabold mb-8 text-gray-900 flex items-center gap-2">
+  🚀 Dashboard <span class="text-blue-500">AVO Dispo AI</span>
+</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Fahrer -->
+  <div class="card p-6">
+    <div class="flex items-center justify-between">
+      <h2 class="font-bold text-lg text-gray-800">👨‍✈️ Fahrer</h2>
+      <a href="/drivers" class="text-blue-500 hover:underline text-sm">Alle ansehen →</a>
+    </div>
+    <p class="text-gray-500 mt-2">Verwalte und überwache deine Fahrer in Echtzeit.</p>
+    <div class="mt-4 text-4xl font-bold text-blue-600">12</div>
+    <p class="text-xs text-gray-400">aktive Fahrer</p>
+  </div>
+
+  <!-- Aufträge -->
+  <div class="card p-6">
+    <div class="flex items-center justify-between">
+      <h2 class="font-bold text-lg text-gray-800">📦 Aufträge</h2>
+      <a href="/orders" class="text-blue-500 hover:underline text-sm">Zur Liste →</a>
+    </div>
+    <p class="text-gray-500 mt-2">Laufende und abgeschlossene Fahrzeugüberführungen.</p>
+    <div class="mt-4 text-4xl font-bold text-blue-600">48</div>
+    <p class="text-xs text-gray-400">insgesamt</p>
+  </div>
+
+  <!-- Neuer Auftrag -->
+  <div class="card p-6">
+    <div class="flex items-center justify-between">
+      <h2 class="font-bold text-lg text-gray-800">➕ Neuer Auftrag</h2>
+    </div>
+    <p class="text-gray-500 mt-2">Erstelle einen neuen Auftrag für deine Disposition.</p>
+    <a
+      href="/orders/new"
+      class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md py-2 mt-6"
+    >
+      🚗 Auftrag anlegen
+    </a>
+  </div>
+</div>
+
+{% endblock %}

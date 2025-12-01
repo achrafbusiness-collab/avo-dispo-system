@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto mt-6">
+  <h1 class="text-2xl font-bold mb-6">👨‍✈️ Fahrer bearbeiten – {{ driver.vorname }} {{ driver.nachname }}</h1>
+
+  <form action="/drivers/{{ driver.id }}/update" method="post" class="space-y-8">
+    <div class="card p-6">
+      <h2 class="text-lg font-semibold mb-4">Allgemein</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <input name="geschlecht" placeholder="Geschlecht" value="{{ driver.geschlecht or '' }}" class="border rounded p-2" />
+        <input name="firma" placeholder="Firma" value="{{ driver.firma or '' }}" class="border rounded p-2" />
+        <input name="vorname" placeholder="Vorname" value="{{ driver.vorname or '' }}" class="border rounded p-2" />
+        <input name="nachname" placeholder="Nachname" value="{{ driver.nachname or '' }}" class="border rounded p-2" />
+        <input name="email" placeholder="E-Mail" value="{{ driver.email or '' }}" class="border rounded p-2" />
+        <input name="telefonnummer" placeholder="Telefonnummer" value="{{ driver.telefonnummer or '' }}" class="border rounded p-2" />
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <h2 class="text-lg font-semibold mb-4">Adresse</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <input name="stadt" placeholder="Stadt" value="{{ driver.stadt or '' }}" class="border rounded p-2" />
+        <input name="plz" placeholder="PLZ" value="{{ driver.plz or '' }}" class="border rounded p-2" />
+        <input name="strasse" placeholder="Straße" value="{{ driver.strasse or '' }}" class="border rounded p-2" />
+        <input name="hausnummer" placeholder="Nr." value="{{ driver.hausnummer or '' }}" class="border rounded p-2" />
+      </div>
+    </div>
+
+    <div class="flex justify-between mt-8">
+      <a href="/drivers/{{ driver.id }}/delete" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+         onclick="return confirm('Fahrer wirklich löschen?')">🗑️ Löschen</a>
+      <button class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">💾 Änderungen speichern</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

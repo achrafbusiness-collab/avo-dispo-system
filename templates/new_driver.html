@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-extrabold mb-8 text-gray-900 text-center">
+  ➕ Neuen Fahrer anlegen
+</h1>
+
+<form action="/create-driver" method="post" class="card max-w-5xl mx-auto p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+  <!-- Persönliche Daten -->
+  <div>
+    <h2 class="text-lg font-semibold mb-2 text-blue-600">Persönliche Daten</h2>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Geschlecht</label>
+      <select name="geschlecht" class="w-full border rounded p-2">
+        <option value="Männlich">Männlich</option>
+        <option value="Weiblich">Weiblich</option>
+        <option value="Divers">Divers</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Vorname</label>
+      <input type="text" name="vorname" class="w-full border rounded p-2" required />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Nachname</label>
+      <input type="text" name="nachname" class="w-full border rounded p-2" required />
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="block font-semibold mb-1">Geburtsdatum</label>
+        <input type="date" name="geburtsdatum" class="w-full border rounded p-2" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-1">Eintrittsdatum</label>
+        <input type="date" name="eintrittsdatum" class="w-full border rounded p-2" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Adresse -->
+  <div>
+    <h2 class="text-lg font-semibold mb-2 text-blue-600">Adresse & Kontakt</h2>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Geburtsland</label>
+      <input type="text" name="geburtsland" class="w-full border rounded p-2" />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Staatsangehörigkeit</label>
+      <input type="text" name="staatsangehoerigkeit" class="w-full border rounded p-2" />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">E-Mail</label>
+      <input type="email" name="email" class="w-full border rounded p-2" />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Telefonnummer</label>
+      <input type="text" name="telefonnummer" class="w-full border rounded p-2" />
+    </div>
+  </div>
+
+  <!-- Anschrift -->
+  <div>
+    <h2 class="text-lg font-semibold mb-2 text-blue-600">Anschrift</h2>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Stadt</label>
+      <input type="text" name="stadt" class="w-full border rounded p-2" />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Straße</label>
+      <input type="text" name="strasse" class="w-full border rounded p-2" />
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <div>
+        <label class="block font-semibold mb-1">Hausnummer</label>
+        <input type="text" name="hausnummer" class="w-full border rounded p-2" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-1">PLZ</label>
+        <input type="text" name="plz" class="w-full border rounded p-2" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Steuer & Sozialdaten -->
+  <div>
+    <h2 class="text-lg font-semibold mb-2 text-blue-600">Steuer & Sozialdaten</h2>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Firma</label>
+      <input type="text" name="firma" value="AVO LOGISTICS" class="w-full border rounded p-2" />
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <div>
+        <label class="block font-semibold mb-1">Steuerklasse</label>
+        <input type="text" name="steuerklasse" class="w-full border rounded p-2" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-1">Steuer ID</label>
+        <input type="text" name="steuer_id" class="w-full border rounded p-2" />
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="block font-semibold mb-1">Sozialversicherungsnummer</label>
+        <input type="text" name="sozialversicherung" class="w-full border rounded p-2" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-1">Krankenkasse</label>
+        <input type="text" name="krankenkasse" class="w-full border rounded p-2" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Bankdaten -->
+  <div>
+    <h2 class="text-lg font-semibold mb-2 text-blue-600">Bankdaten</h2>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Bank Name</label>
+      <input type="text" name="bankname" class="w-full border rounded p-2" />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">IBAN</label>
+      <input type="text" name="iban" class="w-full border rounded p-2" />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">SWIFT</label>
+      <input type="text" name="swift" class="w-full border rounded p-2" />
+    </div>
+  </div>
+
+  <!-- Führerschein -->
+  <div>
+    <h2 class="text-lg font-semibold mb-2 text-blue-600">Führerschein</h2>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Führerscheinnummer</label>
+      <input type="text" name="fuehrerschein_nr" class="w-full border rounded p-2" />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Ablaufdatum</label>
+      <input type="date" name="fuehrerschein_ablauf" class="w-full border rounded p-2" />
+    </div>
+  </div>
+
+  <!-- Datenschutz -->
+  <div>
+    <h2 class="text-lg font-semibold mb-2 text-blue-600">Datenschutz</h2>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Registriert am</label>
+      <input type="date" name="registriert_am" class="w-full border rounded p-2" />
+    </div>
+    <div class="mb-3">
+      <label class="block font-semibold mb-1">Datenschutz zugestimmt</label>
+      <input type="date" name="datenschutz" class="w-full border rounded p-2" />
+    </div>
+  </div>
+
+  <div class="md:col-span-2 text-center mt-6">
+    <button
+      type="submit"
+      class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow"
+    >
+      💾 Fahrer speichern
+    </button>
+  </div>
+</form>
+
+{% endblock %}

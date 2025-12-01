@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-extrabold mb-8 text-gray-900 flex items-center gap-2">
+  📑 Auftragsübersicht
+</h1>
+
+<div class="card p-6 overflow-x-auto">
+  <table class="min-w-full text-left border-collapse">
+    <thead class="bg-gray-100 sticky top-0">
+      <tr class="text-sm text-gray-700">
+        <th class="p-3">Fahrt-ID</th>
+        <th class="p-3">Kennzeichen</th>
+        <th class="p-3">Fahrzeug</th>
+        <th class="p-3">Startort</th>
+        <th class="p-3">Zielort</th>
+        <th class="p-3">Abholdatum</th>
+        <th class="p-3">Auslieferdatum</th>
+        <th class="p-3">Firma</th>
+        <th class="p-3">Ansprechpartner</th>
+        <th class="p-3">Telefon</th>
+        <th class="p-3">Entfernung</th>
+        <th class="p-3">Referenz</th>
+      </tr>
+    </thead>
+    <tbody class="text-sm">
+      {% for order in orders %}
+      <tr class="border-b hover:bg-gray-50 transition">
+        <td class="p-3">{{ order.fahrtid }}</td>
+        <td class="p-3">{{ order.kennzeichen }}</td>
+        <td class="p-3">{{ order.fahrzeug }}</td>
+        <td class="p-3">{{ order.start_ort }}</td>
+        <td class="p-3">{{ order.ziel_ort }}</td>
+        <td class="p-3">{{ order.abholdatum }}</td>
+        <td class="p-3">{{ order.auslieferdatum }}</td>
+        <td class="p-3">{{ order.firma }}</td>
+        <td class="p-3">{{ order.ap_name }}</td>
+        <td class="p-3">{{ order.ap_telefon }}</td>
+        <td class="p-3">{{ order.entfernung }} km</td>
+        <td class="p-3">{{ order.referenz }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

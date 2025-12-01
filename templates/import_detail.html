@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto mt-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">📥 Importierter Auftrag #{{ imp.id }}</h1>
+    <div class="space-x-3">
+      <button id="confirm-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow">
+        ✅ Bestätigen
+      </button>
+      <button id="discard-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow">
+        🗑️ Verwerfen
+      </button>
+    </div>
+  </div>
+
+  <form id="import-form" class="card p-6 space-y-4">
+    <h2 class="text-lg font-semibold border-b pb-2">Allgemeine Informationen</h2>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium">Fahrt-ID</label>
+        <input type="text" name="fahrtid" value="{{ imp.fahrtid or '' }}" class="w-full border rounded-lg p-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Kennzeichen</label>
+        <input type="text" name="kennzeichen" value="{{ imp.kennzeichen or '' }}" class="w-full border rounded-lg p-2">
+      </div>
+      <div class="col-span-2">
+        <label class="block text-sm font-medium">Fahrzeug</label>
+        <input type="text" name="fahrzeug" value="{{ imp.fahrzeug or '' }}" class="w-full border rounded-lg p-2">
+      </div>
+      <div class="col-span-2">
+        <label class="block text-sm font-medium">Info / Bemerkung</label>
+        <textarea name="info" rows="3" class="w-full border rounded-lg p-2">{{ imp.info or '' }}</textarea>
+      </div>
+    </div>
+
+    <h2 class="text-lg font-semibold border-b pb-2 mt-6">Abholung</h2>
+    <div class="grid grid-cols-2 gap-4">
+      <input type="text" name="start_str" placeholder="Straße" value="{{ imp.start_str or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="start_nr" placeholder="Nr." value="{{ imp.start_nr or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="start_plz" placeholder="PLZ" value="{{ imp.start_plz or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="start_ort" placeholder="Ort" value="{{ imp.start_ort or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="abholdatum" placeholder="Datum" value="{{ imp.abholdatum or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="abhol_von" placeholder="Von" value="{{ imp.abhol_von or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="abhol_bis" placeholder="Bis" value="{{ imp.abhol_bis or '' }}" class="border p-2 rounded-lg">
+    </div>
+
+    <h2 class="text-lg font-semibold border-b pb-2 mt-6">Zustellung</h2>
+    <div class="grid grid-cols-2 gap-4">
+      <input type="text" name="ziel_str" placeholder="Straße" value="{{ imp.ziel_str or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="ziel_nr" placeholder="Nr." value="{{ imp.ziel_nr or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="ziel_plz" placeholder="PLZ" value="{{ imp.ziel_plz or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="ziel_ort" placeholder="Ort" value="{{ imp.ziel_ort or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="auslieferdatum" placeholder="Datum" value="{{ imp.auslieferdatum or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="ausliefer_von" placeholder="Von" value="{{ imp.ausliefer_von or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="ausliefer_bis" placeholder="Bis" value="{{ imp.ausliefer_bis or '' }}" class="border p-2 rounded-lg">
+    </div>
+
+    <h2 class="text-lg font-semibold border-b pb-2 mt-6">Kunde</h2>
+    <div class="grid grid-cols-2 gap-4">
+      <input type="text" name="firma" placeholder="Firma" value="{{ imp.firma or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="ap_name" placeholder="Ansprechpartner" value="{{ imp.ap_name or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="ap_telefon" placeholder="Telefon" value="{{ imp.ap_telefon or '' }}" class="border p-2 rounded-lg">
+      <input type="text" name="referenz" placeholder="Referenz" value="{{ imp.referenz or '' }}" class="border p-2 rounded-lg">
+    </div>
+
+    <div class="mt-8 text-sm text-gray-400 border-t pt-3">
+      <p><strong>E-Mail-Betreff:</strong> {{ imp.subject }}</p>
+      <p><strong>Von:</strong> {{ imp.sender }}</p>
+      <p><strong>Eingegangen:</strong> {{ imp.received_at }}</p>
+    </div>
+  </form>
+</div>
+
+<script>
+document.getElementById('confirm-btn').addEventListener('click', async () => {
+  if (!confirm("Diesen Auftrag wirklich übernehmen?")) return;
+  const res = await fetch(`/api/import/confirm/{{ imp.id }}`, { method: "POST" });
+  const data = await res.json();
+  if (data.status === "ok") {
+    alert("✅ Auftrag wurde übernommen!");
+    window.location.href = "/orders";
+  } else {
+    alert("❌ Fehler: " + data.message);
+  }
+});
+
+document.getElementById('discard-btn').addEventListener('click', async () => {
+  if (!confirm("Import verwerfen?")) return;
+  const res = await fetch(`/api/import/discard/{{ imp.id }}`, { method: "POST" });
+  const data = await res.json();
+  if (data.status === "ok") {
+    alert("🗑️ Auftrag verworfen.");
+    window.location.href = "/import";
+  } else {
+    alert("❌ Fehler: " + data.message);
+  }
+});
+</script>
+{% endblock %}

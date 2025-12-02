@@ -6,17 +6,23 @@ import json
 import traceback
 import os
 
-from app.database import SessionLocal
+from sqlalchemy.orm import Session
+
+from app.database import get_db, SessionLocal
 from app.models import ImportedOrder
-from app.services.ai_service import extract_with_ai  # <-- richtig
+from app.services.ai_service import extract_order_data
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 IMAP_CONFIG_FILE = os.path.join(BASE_DIR, "imap_config.json")
 
 
+# ============================================================
+# IMAP KONFIG LADEN
+# ============================================================
 def load_imap_config():
     if not os.path.exists(IMAP_CONFIG_FILE):
         return {}
+
     try:
         with open(IMAP_CONFIG_FILE, "r") as f:
             return json.load(f)
@@ -24,100 +30,121 @@ def load_imap_config():
         return {}
 
 
+# ============================================================
+# EMAIL → PLAIN TEXT EXTRAKTION
+# ============================================================
 def extract_plain_text_from_email(msg):
+    """
+    Holt den Text-Inhalt aus der E-Mail.
+    Unterstützt multipart + encoding-fixes.
+    """
+
     try:
         if msg.is_multipart():
             parts = []
             for part in msg.walk():
                 if part.get_content_type() == "text/plain":
                     try:
-                        parts.append(part.get_payload(decode=True).decode(errors="ignore"))
+                        txt = part.get_payload(decode=True).decode(errors="ignore")
+                        parts.append(txt)
                     except:
                         pass
             return "\n".join(parts).strip()
+
         else:
             return msg.get_payload(decode=True).decode(errors="ignore")
+
     except:
         return ""
 
 
-def imap_login(mail_obj, user, password):
+# ============================================================
+# HAUPTFUNKTION: EMAILS ABRUFEN UND SPEICHERN
+# ============================================================
+def fetch_and_import_emails():
+    """
+    Holt alle ungelesenen Emails vom IMAP-Server,
+    extrahiert die Daten und speichert sie als ImportedOrder.
+    """
+
+    config = load_imap_config()
+    if not config:
+        print("⚠️ Keine IMAP Konfiguration gefunden.")
+        return
+
+    host = config.get("host")
+    username = config.get("username")
+    password = config.get("password")
+    mailbox = config.get("mailbox", "INBOX")
+
+    if not host or not username or not password:
+        print("⚠️ IMAP Zugangsdaten unvollständig.")
+        return
+
     try:
-        mail_obj.login(user, password)
-        return True
+        mail = imaplib.IMAP4_SSL(host)
+        mail.login(username, password)
+        mail.select(mailbox)
     except:
-        return False
-
-
-def test_imap_connection():
-    config = load_imap_config()
-    try:
-        mail = imaplib.IMAP4_SSL(config["imap_host"], int(config["imap_port"]))
-        ok = imap_login(mail, config["imap_user"], config["imap_pass"])
-        mail.logout()
-
-        if ok:
-            return {"status": "success"}
-        return {"status": "error", "message": "Login fehlgeschlagen"}
-
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-
-def fetch_imports():
-    config = load_imap_config()
-
-    host = config.get("imap_host")
-    user = config.get("imap_user")
-    password = config.get("imap_pass")
-    port = int(config.get("imap_port", 993))
-
-    created = []
+        print("❌ IMAP-Verbindung fehlgeschlagen.")
+        traceback.print_exc()
+        return
 
     try:
-        mail = imaplib.IMAP4_SSL(host, port)
-        if not imap_login(mail, user, password):
-            return []
+        result, data = mail.search(None, "UNSEEN")
 
-        mail.select("INBOX")
-        status, data = mail.search(None, "UNSEEN")
+        if result != "OK":
+            print("⚠️ Keine ungelesenen Nachrichten gefunden.")
+            return
 
-        if status != "OK":
-            return []
+        email_ids = data[0].split()
 
-        db = SessionLocal()
+        for eid in email_ids:
+            _, msg_data = mail.fetch(eid, "(RFC822)")
 
-        for num in data[0].split():
-            status, msg_data = mail.fetch(num, "(RFC822)")
+            raw_email = msg_data[0][1]
+            msg = email.message_from_bytes(raw_email)
 
-            msg = email.message_from_bytes(msg_data[0][1])
-            subject = msg.get("subject", "")
-            sender = msg.get("from", "")
-            date_ = msg.get("date", "")
-            body = extract_plain_text_from_email(msg)
+            subject = msg.get("Subject", "")
+            sender = msg.get("From", "")
+            text = extract_plain_text_from_email(msg)
 
-            parsed = extract_with_ai(body)  # <-- richtig
+            # KI / Regex Datenextraktion
+            extracted = extract_order_data(text)
 
-            new_imp = ImportedOrder(
-                source_msg_id=num.decode(),
+            # Datenbank speichern
+            db = SessionLocal()
+
+            imported = ImportedOrder(
                 subject=subject,
                 sender=sender,
-                received_at=date_,
-                raw_text=body,
-                **parsed
+                raw_text=text,
+                mv_nr=extracted.get("mv_nr"),
+                kennzeichen=extracted.get("kennzeichen"),
+                modell=extracted.get("modell"),
+                fin=extracted.get("fin"),
+                abhol_stadt=extracted.get("abhol_stadt"),
+                abhol_strasse=extracted.get("abhol_strasse"),
+                abhol_plz=extracted.get("abhol_plz"),
+                abhol_datum=extracted.get("abhol_datum"),
+                anliefer_stadt=extracted.get("anliefer_stadt"),
+                anliefer_strasse=extracted.get("anliefer_strasse"),
+                anliefer_plz=extracted.get("anliefer_plz"),
+                anliefer_datum=extracted.get("anliefer_datum"),
+                infofeld=extracted.get("infofeld"),
             )
 
-            db.add(new_imp)
+            db.add(imported)
             db.commit()
-            db.refresh(new_imp)
+            db.close()
 
-            created.append(new_imp.id)
-
-        db.close()
-        mail.logout()
-
-        return created
-
-    except Exception as e:
+    except:
+        print("❌ Fehler beim Abrufen der Emails.")
         traceback.print_exc()
-        return []
+
+    finally:
+        try:
+            mail.close()
+            mail.logout()
+        except:
+            pass

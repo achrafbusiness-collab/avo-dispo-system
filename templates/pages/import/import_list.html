@@ -1,0 +1,37 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6">Import Center</h1>
+
+<div class="overflow-x-auto bg-white shadow rounded-lg">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Betreff</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Absender</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kennzeichen</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Eingang</th>
+                <th class="px-6 py-3"></th>
+            </tr>
+        </thead>
+
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for imp in imports %}
+            <tr>
+                <td class="px-6 py-4">{{ imp.id }}</td>
+                <td class="px-6 py-4">{{ imp.subject }}</td>
+                <td class="px-6 py-4">{{ imp.sender }}</td>
+                <td class="px-6 py-4">{{ imp.kennzeichen if imp.kennzeichen else "—" }}</td>
+                <td class="px-6 py-4">{{ imp.received_at.strftime('%d.%m.%Y %H:%M') if imp.received_at else "—" }}</td>
+
+                <td class="px-6 py-4 text-right">
+                    <a href="/import/{{ imp.id }}" class="text-blue-600 hover:underline">Öffnen</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

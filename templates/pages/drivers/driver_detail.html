@@ -1,0 +1,22 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6">Fahrer: {{ driver.vorname }} {{ driver.nachname }}</h1>
+
+<div class="bg-white p-6 rounded-lg shadow space-y-4">
+    <p><strong>Vorname:</strong> {{ driver.vorname }}</p>
+    <p><strong>Nachname:</strong> {{ driver.nachname }}</p>
+    <p><strong>Telefon:</strong> {{ driver.telefonnummer if driver.telefonnummer else "—" }}</p>
+    <p><strong>Stadt:</strong> {{ driver.stadt if driver.stadt else "—" }}</p>
+    <p><strong>Führerschein Nummer:</strong> {{ driver.fuehrerschein_nummer if driver.fuehrerschein_nummer else "—" }}</p>
+    <p><strong>Führerschein Ablauf:</strong> {{ driver.fuehrerschein_ablauf.strftime('%d.%m.%Y') if driver.fuehrerschein_ablauf else "—" }}</p>
+</div>
+
+<div class="mt-6 space-x-4">
+    <a href="/drivers/{{ driver.id }}/edit" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">Bearbeiten</a>
+    <form action="/drivers/{{ driver.id }}/delete" method="post" class="inline">
+        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" onclick="return confirm('Fahrer wirklich löschen?')">Löschen</button>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,138 +1,117 @@
 # app/routes/import_center.py
 
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from app.database import SessionLocal
-from app.models import ImportedOrder, Order, Driver
-from app.services.email_service import fetch_imports, test_imap_connection
-from app.services.ai_service import extract_with_ai
-import traceback
+from sqlalchemy.orm import Session
 import os
+
+from app.database import get_db
+from app.models import ImportedOrder, Order
 
 router = APIRouter()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(BASE_DIR), "templates"))
+# Templates laden
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 
 # ============================================================
-# 📥 Import-Center Übersicht
+# Import Center – Liste aller importierten Aufträge
 # ============================================================
 @router.get("/import", response_class=HTMLResponse)
-async def import_page(request: Request):
-    db = SessionLocal()
-    imports = db.query(ImportedOrder).order_by(ImportedOrder.created_at.desc()).all()
-    db.close()
+async def import_list(request: Request, db: Session = Depends(get_db)):
 
-    return templates.TemplateResponse("import.html", {
-        "request": request,
-        "imports": imports
-    })
+    imports = db.query(ImportedOrder)\
+                .order_by(ImportedOrder.received_at.desc())\
+                .all()
 
-
-# ============================================================
-# 🟢 IMAP Verbindung testen
-# ============================================================
-@router.get("/api/import/test")
-async def api_import_test():
-    try:
-        result = test_imap_connection()
-        return result
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+    return templates.TemplateResponse(
+        "import_center.html",
+        {
+            "request": request,
+            "imports": imports
+        }
+    )
 
 
 # ============================================================
-# 📧 Neue ungelesene Emails importieren
-# ============================================================
-@router.get("/api/import/fetch")
-async def api_fetch_imports():
-    try:
-        created_ids = fetch_imports()
-        return {"status": "ok", "created": created_ids}
-
-    except Exception as e:
-        traceback.print_exc()
-        return {"status": "error", "message": str(e)}
-
-
-# ============================================================
-# 📄 Import-Detailseite
+# Import Detail
 # ============================================================
 @router.get("/import/{imp_id}", response_class=HTMLResponse)
-async def import_detail_page(request: Request, imp_id: int):
-    db = SessionLocal()
+async def import_detail(imp_id: int, request: Request, db: Session = Depends(get_db)):
+
     imp = db.query(ImportedOrder).filter(ImportedOrder.id == imp_id).first()
-    drivers = db.query(Driver).all()
-    db.close()
 
     if not imp:
-        return templates.TemplateResponse("import_detail_missing.html", {
+        raise HTTPException(status_code=404, detail="Import nicht gefunden")
+
+    return templates.TemplateResponse(
+        "import_detail.html",
+        {
             "request": request,
-            "id": imp_id
-        })
-
-    return templates.TemplateResponse("import_detail.html", {
-        "request": request,
-        "imp": imp,
-        "drivers": drivers
-    })
+            "imp": imp
+        }
+    )
 
 
 # ============================================================
-# 🟡 Import bestätigen → Auftrag erstellen
+# Import verwerfen (löschen)
 # ============================================================
-@router.post("/api/import/confirm/{imp_id}")
-async def confirm_import(request: Request, imp_id: int):
-    from app.services.order_service import promote_imported_order
+@router.post("/import/{imp_id}/discard")
+async def discard_import(imp_id: int, db: Session = Depends(get_db)):
 
-    db = SessionLocal()
-    try:
-        imp = db.query(ImportedOrder).filter(ImportedOrder.id == imp_id).first()
-        if not imp:
-            return {"status": "error", "message": "Import nicht gefunden"}
+    imp = db.query(ImportedOrder).filter(ImportedOrder.id == imp_id).first()
 
-        # Form-Daten überschreiben
-        form = await request.form()
-        for k, v in form.items():
-            if hasattr(imp, k):
-                setattr(imp, k, v)
+    if not imp:
+        raise HTTPException(status_code=404, detail="Import nicht gefunden")
 
-        db.commit()
+    db.delete(imp)
+    db.commit()
 
-        new_order_id = promote_imported_order(imp)
-
-        return {"status": "ok", "order_id": new_order_id}
-
-    except Exception as e:
-        db.rollback()
-        traceback.print_exc()
-        return {"status": "error", "message": str(e)}
-
-    finally:
-        db.close()
+    return RedirectResponse("/import", status_code=303)
 
 
 # ============================================================
-# 🗑️ Import löschen
+# Import → Auftrag konvertieren
 # ============================================================
-@router.post("/api/import/discard/{imp_id}")
-async def discard_import(imp_id: int):
-    db = SessionLocal()
-    try:
-        imp = db.query(ImportedOrder).filter(ImportedOrder.id == imp_id).first()
+@router.post("/import/{imp_id}/convert")
+async def convert_import(imp_id: int, db: Session = Depends(get_db)):
 
-        if not imp:
-            return {"status": "error", "message": "Import nicht gefunden"}
+    imp = db.query(ImportedOrder).filter(ImportedOrder.id == imp_id).first()
 
-        db.delete(imp)
-        db.commit()
-        return {"status": "ok"}
+    if not imp:
+        raise HTTPException(status_code=404, detail="Import nicht gefunden")
 
-    except Exception as e:
-        db.rollback()
-        return {"status": "error", "message": str(e)}
+    # Auftrag erzeugen
+    new_order = Order(
+        status="neu",
+        kennzeichen=imp.kennzeichen,
+        modell=imp.modell,
+        vin=imp.fin,
 
-    finally:
-        db.close()
+        abhol_strasse=imp.abhol_strasse,
+        abhol_str_nr=imp.abhol_str_nr,
+        abhol_plz=imp.abhol_plz,
+        abhol_stadt=imp.abhol_stadt,
+        ap_abholung=imp.ap_abholung,
+        kontakt_abholung=imp.kontakt_abholung,
+        abhol_datum=imp.abhol_datum,
+
+        anliefer_strasse=imp.anliefer_strasse,
+        anliefer_str_nr=imp.anliefer_str_nr,
+        anliefer_plz=imp.anliefer_plz,
+        anliefer_stadt=imp.anliefer_stadt,
+        ap_anlieferung=imp.ap_anlieferung,
+        kontakt_anlieferung=imp.kontakt_anlieferung,
+        anliefer_datum=imp.anliefer_datum,
+    )
+
+    db.add(new_order)
+
+    # Import als verarbeitet markieren
+    imp.converted_to_order = True
+
+    db.commit()
+
+    return RedirectResponse(f"/orders/{new_order.id}", status_code=303)

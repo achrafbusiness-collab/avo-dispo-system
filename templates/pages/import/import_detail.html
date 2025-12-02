@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6">Importierter Auftrag #{{ imp.id }}</h1>
+
+<div class="bg-white p-6 rounded-lg shadow space-y-6">
+
+    <h2 class="text-xl font-semibold">Email-Daten</h2>
+    <p><strong>Betreff:</strong> {{ imp.subject }}</p>
+    <p><strong>Absender:</strong> {{ imp.sender }}</p>
+    <p><strong>Eingang:</strong> 
+        {{ imp.received_at.strftime('%d.%m.%Y %H:%M') if imp.received_at else "—" }}
+    </p>
+
+    <h2 class="text-xl font-semibold pt-4">Automatisch erkannte Daten</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+            <p><strong>MV-Nummer:</strong> {{ imp.mv_nr if imp.mv_nr else "—" }}</p>
+            <p><strong>Kennzeichen:</strong> {{ imp.kennzeichen if imp.kennzeichen else "—" }}</p>
+            <p><strong>Modell:</strong> {{ imp.modell if imp.modell else "—" }}</p>
+            <p><strong>FIN:</strong> {{ imp.fin if imp.fin else "—" }}</p>
+        </div>
+
+        <div>
+            <p><strong>Abholung:</strong></p>
+            <p>{{ imp.abhol_strasse }} {{ imp.abhol_str_nr }}</p>
+            <p>{{ imp.abhol_plz }} {{ imp.abhol_stadt }}</p>
+            <p><strong>Datum:</strong> {{ imp.abhol_datum if imp.abhol_datum else "—" }}</p>
+
+            <br>
+
+            <p><strong>Anlieferung:</strong></p>
+            <p>{{ imp.anliefer_strasse }} {{ imp.anliefer_str_nr }}</p>
+            <p>{{ imp.anliefer_plz }} {{ imp.anliefer_stadt }}</p>
+            <p><strong>Datum:</strong> {{ imp.anliefer_datum if imp.anliefer_datum else "—" }}</p>
+        </div>
+    </div>
+
+    <h2 class="text-xl font-semibold pt-4">Original Email Text</h2>
+    <pre class="bg-gray-100 p-4 rounded text-sm whitespace-pre-wrap">
+{{ imp.raw_text }}
+    </pre>
+
+</div>
+
+<div class="mt-6 space-x-4">
+
+    <!-- Konvertieren -->
+    <form action="/import/{{ imp.id }}/convert" method="post" class="inline">
+        <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+            In Auftrag umwandeln
+        </button>
+    </form>
+
+    <!-- Löschen -->
+    <form action="/import/{{ imp.id }}/discard" method="post" class="

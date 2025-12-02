@@ -1,0 +1,25 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6">Dashboard</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <div class="bg-white p-6 rounded-xl shadow">
+        <p class="text-gray-500">Aktive Aufträge</p>
+        <h2 class="text-3xl font-bold text-blue-600">{{ orders_count }}</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+        <p class="text-gray-500">Offene Importe</p>
+        <h2 class="text-3xl font-bold text-blue-600">{{ pending_imports }}</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+        <p class="text-gray-500">Fahrer</p>
+        <h2 class="text-3xl font-bold text-blue-600">{{ drivers_count if drivers_count else "—" }}</h2>
+    </div>
+
+</div>
+
+{% endblock %}

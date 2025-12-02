@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title if title else "AVO Logistics Dispo AI" }}</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: ui-sans-serif, system-ui;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+
+    <!-- MAIN WRAPPER -->
+    <div class="min-h-screen flex">
+
+        <!-- SIDEBAR -->
+        {% include 'components/sidebar.html' %}
+
+        <!-- CONTENT AREA -->
+        <div class="flex-1 flex flex-col">
+
+            <!-- TOP BAR -->
+            {% include 'components/topbar.html' %}
+
+            <!-- PAGE CONTENT -->
+            <main class="p-6">
+                {% block content %}{% endblock %}
+            </main>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

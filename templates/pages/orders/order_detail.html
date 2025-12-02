@@ -1,0 +1,41 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6">Auftrag #{{ order.id }}</h1>
+
+<div class="bg-white p-6 rounded-lg shadow space-y-6">
+
+    <h2 class="text-xl font-semibold">Fahrzeug</h2>
+    <p><strong>Kennzeichen:</strong> {{ order.kennzeichen }}</p>
+    <p><strong>Modell:</strong> {{ order.modell }}</p>
+    <p><strong>FIN:</strong> {{ order.vin if order.vin else "—" }}</p>
+
+    <h2 class="text-xl font-semibold pt-4">Abholung</h2>
+    <p>{{ order.abhol_strasse }} {{ order.abhol_str_nr }}, {{ order.abhol_plz }} {{ order.abhol_stadt }}</p>
+    <p><strong>Datum:</strong> {{ order.abhol_datum }}</p>
+
+    <h2 class="text-xl font-semibold pt-4">Anlieferung</h2>
+    <p>{{ order.anliefer_strasse }} {{ order.anliefer_str_nr }}, {{ order.anliefer_plz }} {{ order.anliefer_stadt }}</p>
+    <p><strong>Datum:</strong> {{ order.anliefer_datum }}</p>
+
+    <h2 class="text-xl font-semibold pt-4">Fahrer</h2>
+    <p>{{ order.driver.vorname if order.driver else "—" }}</p>
+
+</div>
+
+<div class="mt-6 space-x-4">
+    <a href="/orders/{{ order.id }}/edit" 
+       class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+       Bearbeiten
+    </a>
+
+    <form action="/orders/{{ order.id }}/delete" method="post" class="inline">
+        <button type="submit" 
+                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                onclick="return confirm('Diesen Auftrag wirklich löschen?')">
+            Löschen
+        </button>
+    </form>
+</div>
+
+{% endblock %}

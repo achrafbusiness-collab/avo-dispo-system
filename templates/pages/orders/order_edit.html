@@ -1,0 +1,43 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6">Auftrag bearbeiten</h1>
+
+<form action="/orders/{{ order.id }}/edit" method="post" class="bg-white p-6 rounded-lg shadow space-y-4">
+
+    <div>
+        <label class="block font-medium mb-1">Kennzeichen *</label>
+        <input type="text" name="kennzeichen" value="{{ order.kennzeichen }}" required class="w-full border rounded px-3 py-2">
+    </div>
+
+    <div>
+        <label class="block font-medium mb-1">Modell</label>
+        <input type="text" name="modell" value="{{ order.modell }}" class="w-full border rounded px-3 py-2">
+    </div>
+
+    <div>
+        <label class="block font-medium mb-1">FIN</label>
+        <input type="text" name="vin" value="{{ order.vin }}" class="w-full border rounded px-3 py-2">
+    </div>
+
+    <div>
+        <label class="block font-medium mb-1">Fahrer</label>
+        <select name="fahrer_id" class="w-full border rounded px-3 py-2">
+            <option value="">— Kein Fahrer —</option>
+            {% for driver in drivers %}
+                <option value="{{ driver.id }}" 
+                    {% if order.fahrer_id == driver.id %}selected{% endif %}>
+                    {{ driver.vorname }} {{ driver.nachname }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit" 
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Speichern
+    </button>
+
+</form>
+
+{% endblock %}

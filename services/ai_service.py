@@ -1,76 +1,116 @@
 # app/services/ai_service.py
 
-import json
-import traceback
-import os
+"""
+AI-gestützte Extraktion von Auftragsdaten aus E-Mails.
+Struktur:
+1. Regelbasierte Vorverarbeitung
+2. Mustererkennung (Regex)
+3. KI-Fallback (optional / später aktivieren)
+4. Heuristische Notlösung
+"""
 
-try:
-    import openai
-except:
-    openai = None
-
-from app.config import OPENAI_API_KEY
-
-if openai and OPENAI_API_KEY:
-    openai.api_key = OPENAI_API_KEY
+import re
 
 
-# ===============================
-# KI-Feldextraktion
-# ===============================
-
-def extract_with_ai(email_text: str):
+# ============================================================
+# Hauptfunktion: Extract aus Rohtext
+# ============================================================
+def extract_order_data(email_text: str) -> dict:
     """
-    Nutzt OpenAI wenn verfügbar, sonst heuristische Extraktion.
+    Extrahiert relevante Felder aus einem E-Mail-Text.
+    Gibt ein strukturiertes Dictionary zurück.
     """
 
     template = {
-        "mv_nr": None, "kennzeichen": None, "modell": None, "fin": None, "auftraggeber": None,
-        "infofeld": None,
-        "abhol_stadt": None, "abhol_strasse": None, "abhol_str_nr": None, "abhol_plz": None,
-        "kontakt_abholung": None, "ap_abholung": None, "abholdatum": None, "abhol_von": None, "abhol_bis": None,
-        "anliefer_stadt": None, "anliefer_strasse": None, "anliefer_str_nr": None, "anliefer_plz": None,
-        "kontakt_anlieferung": None, "ap_anlieferung": None, "anlieferdatum": None, "anliefer_von": None, "anliefer_bis": None,
-        "kilometer": None, "preis": None, "preis_selbstst": None,
-        "fahrer_id": None
+        "mv_nr": None,
+        "kennzeichen": None,
+        "modell": None,
+        "fin": None,
+
+        "abhol_stadt": None,
+        "abhol_strasse": None,
+        "abhol_plz": None,
+        "abhol_datum": None,
+
+        "anliefer_stadt": None,
+        "anliefer_strasse": None,
+        "anliefer_plz": None,
+        "anliefer_datum": None,
+
+        "infofeld": "",
     }
 
-    # ==========================
-    # OpenAI Parsing
-    # ==========================
-    if OPENAI_API_KEY and openai:
+    text = email_text.replace("\r", "").strip()
+
+
+    # ========================================================
+    # 1) MV / Auftrag / Referenznummer
+    # ========================================================
+    mv_match = re.search(r"(MV|Mv|mv)[-:\s]*([A-Za-z0-9]+)", text)
+    if mv_match:
+        template["mv_nr"] = mv_match.group(2).strip()
+
+
+    # ========================================================
+    # 2) Kennzeichen
+    # ========================================================
+    kenn_match = re.search(r"Kennzeichen[:\s]*([A-Z]{1,3}\s*[A-Z0-9]{1,4})", text)
+    if kenn_match:
+        template["kennzeichen"] = kenn_match.group(1).strip()
+
+
+    # ========================================================
+    # 3) FIN
+    # ========================================================
+    fin_match = re.search(r"(FIN|Vin|Fahrgestellnummer)[:\s]*([A-HJ-NPR-Z0-9]{11,17})", text)
+    if fin_match:
+        template["fin"] = fin_match.group(2).strip()
+
+
+    # ========================================================
+    # 4) Modell / Fahrzeugtyp
+    # ========================================================
+    model_match = re.search(r"Modell[:\s]*(.+)", text)
+    if model_match:
+        template["modell"] = model_match.group(1).split("\n")[0].strip()
+
+
+    # ========================================================
+    # 5) Adressen (extrem vereinfacht – später KI)
+    # ========================================================
+    city_match = re.search(r"(\d{5})\s+([A-Za-zäöüÄÖÜß\s]+)", text)
+    if city_match:
+        template["abhol_plz"] = city_match.group(1)
+        template["abhol_stadt"] = city_match.group(2).strip()
+
+
+    # ========================================================
+    # 6) Datumsangaben
+    # ========================================================
+    date_match = re.search(r"(\d{1,2}\.\d{1,2}\.\d{2,4})", text)
+    if date_match:
+        template["abhol_datum"] = date_match.group(1)
+
+
+    # ========================================================
+    # 7) KI-Fallback – vorbereitet, aber noch nicht aktiv
+    # ========================================================
+    # TODO: später aktivieren
+    # ai_result = call_ai_model(email_text)
+    # template = merge_ai_result(template, ai_result)
+
+
+    # ========================================================
+    # 8) Heuristische Notlösung
+    # ========================================================
+    lower = text.lower()
+
+    if not template["kennzeichen"] and "kennzeichen" in lower:
         try:
-            prompt = f"""
-Extrahiere alle Auftragsdaten aus dieser E-Mail und gib sie als sauberes JSON zurück:
+            template["kennzeichen"] = text.split("Kennzeichen")[-1].split("\n")[0].strip()
+        except:
+            pass
 
-\"\"\"{email_text}\"\"\"
-"""
-
-            response = openai.ChatCompletion.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=700
-            )
-
-            parsed = json.loads(response["choices"][0]["message"]["content"])
-
-            for key in template.keys():
-                template[key] = parsed.get(key)
-
-            return template
-
-        except Exception as e:
-            traceback.print_exc()
-            print("❌ AI Parsing fehlgeschlagen – nutze Heuristik")
-
-    # ==========================
-    # Heuristische Notfalllösung
-    # ==========================
-    lower = email_text.lower()
-
-    if "kennzeichen" in lower:
-        template["kennzeichen"] = email_text.split("Kennzeichen")[-1].split("\n")[0].strip()
-
-    template["infofeld"] = "Automatisch extrahiert (Heuristik). Bitte prüfen."
+    template["infofeld"] = "Automatisch extrahiert. Bitte prüfen."
 
     return template

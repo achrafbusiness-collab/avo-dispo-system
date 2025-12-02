@@ -1,0 +1,11 @@
+<span class="
+    px-3 py-1 text-xs rounded 
+    {% if status == 'neu' %} bg-gray-200 text-gray-700 
+    {% elif status == 'zugewiesen' %} bg-blue-200 text-blue-800
+    {% elif status == 'unterwegs' %} bg-yellow-200 text-yellow-800
+    {% elif status == 'abgeholt' %} bg-green-200 text-green-800
+    {% elif status == 'geliefert' %} bg-purple-200 text-purple-800
+    {% else %} bg-gray-100 text-gray-400 {% endif %}
+">
+    {{ status }}
+</span>

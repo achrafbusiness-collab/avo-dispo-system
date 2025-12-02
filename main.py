@@ -1,80 +1,69 @@
-# main.py — AVO Logistics Dispo AI (modulare Version)
-
+fimport os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-import os
-
-# ======================================
-# DATABASE
-# ======================================
+# Database & Models
 from app.database import Base, engine
-from app.models import *  # Driver, Order, ImportedOrder, User
+from app.models import Driver, Order, ImportedOrder, User
 
-# ======================================
-# ROUTES
-# ======================================
-from app.routes.dashboard import router as dashboard_router
-from app.routes.drivers import router as drivers_router
-from app.routes.orders import router as orders_router
-from app.routes.import_center import router as import_router
+# Routers
 from app.auth.auth_router import router as auth_router
+from app.routes.import_center import router as import_router
+from app.routes.orders import router as orders_router
+from app.routes.drivers import router as drivers_router
+from app.routes.dashboard import router as dashboard_router
 
+# ---------------------------------------------------------
+# INITIALISIERUNG
+# ---------------------------------------------------------
 
-# ======================================
-# APP INITIALISIEREN
-# ======================================
 app = FastAPI(title="AVO Logistics Dispo AI")
 
-# --- CORS erlauben (wichtig für App später) ---
+# Datenbanktabellen erzeugen (falls nicht vorhanden)
+Base.metadata.create_all(bind=engine)
+
+# Basisverzeichnis korrekt bestimmen
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Templates
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+# Static Files
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+
+# ---------------------------------------------------------
+# CORS – für spätere Fahrer-App wichtig
+# ---------------------------------------------------------
+
+origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       # später beschränken wir das
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# --- Static & Templates ---
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
-
-# --- DB Tabellen generieren ---
-Base.metadata.create_all(bind=engine)
-
-
-# ======================================
+# ---------------------------------------------------------
 # ROUTER REGISTRIEREN
-# ======================================
-app.include_router(dashboard_router)
-app.include_router(drivers_router)
-app.include_router(orders_router)
-app.include_router(import_router)
-app.include_router(auth_router)
+# ---------------------------------------------------------
+
+app.include_router(auth_router, prefix="/auth", tags=["Auth"])
+app.include_router(import_router, prefix="/import", tags=["Import Center"])
+app.include_router(orders_router, prefix="/orders", tags=["Orders"])
+app.include_router(drivers_router, prefix="/drivers", tags=["Drivers"])
+app.include_router(dashboard_router, prefix="/dashboard", tags=["Dashboard"])
 
 
-# ======================================
-# STATUS ROUTE
-# ======================================
-@app.get("/status")
-async def status():
-    return {"message": "AVO Logistics Dispo AI läuft"}
-
-
-# ======================================
-# DEV SERVER STARTEN
-# ======================================
-from fastapi.responses import RedirectResponse
+# ---------------------------------------------------------
+# ROOT ENDPOINT (Optional)
+# ---------------------------------------------------------
 
 @app.get("/")
-async def root():
-    return RedirectResponse(url="/dashboard")
-
-if __name__ == "__main__":
-    import uvicorn
-    print("Starting AVO Dispo AI on http://127.0.0.1:8000")
-    uvicorn.run(app, host="127.0.0.1", port=8001, reload=True)
+def root():
+    return {"message": "AVO Logistics Dispo AI – Backend läuft erfolgreich."}

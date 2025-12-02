@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
-from app.database import SessionLocal
+from sqlalchemy.orm import Session
+
+from app.database import get_db
 from app.models.user import User
-from app.auth.password_handler import hash_password, verify_password
+from app.auth.password_handler import verify_password
 from app.auth.jwt_handler import create_token, decode_token
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -10,99 +12,59 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-# -------------------------------
-# 🟢 TOKEN VALIDIEREN
-# -------------------------------
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    payload = decode_token(token)
-    user_id = payload.get("user_id")
+# ---------------------------------------------------------
+# 🔍 Aktuellen User anhand Token validieren
+# ---------------------------------------------------------
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = decode_token(token)
+        user_id = payload.get("user_id")
 
-    db = SessionLocal()
-    user = db.query(User).filter(User.id == user_id).first()
-    db.close()
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Ungültiger Token")
+
+        user = db.query(User).filter(User.id == user_id).first()
+
+        if not user:
+            raise HTTPException(status_code=401, detail="Benutzer existiert nicht")
+
+        if not user.is_active:
+            raise HTTPException(status_code=403, detail="Benutzer ist deaktiviert")
+
+        return user
+
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token ungültig oder abgelaufen")
+
+
+# ---------------------------------------------------------
+# 🔐 LOGIN ENDPOINT
+# ---------------------------------------------------------
+@router.post("/login")
+async def login(request: Request, db: Session = Depends(get_db)):
+    data = await request.json()
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email und Passwort erforderlich")
+
+    user = db.query(User).filter(User.email == email).first()
 
     if not user:
         raise HTTPException(status_code=401, detail="Benutzer nicht gefunden")
 
-    return user
-
-
-# -------------------------------
-# 🔐 LOGIN
-# -------------------------------
-@router.post("/login")
-async def login(request: Request):
-    data = await request.json()
-    email = data.get("email")
-    password = data.get("password")
-
-    db = SessionLocal()
-    user = db.query(User).filter(User.email == email).first()
-    db.close()
-
-    if not user:
-        raise HTTPException(status_code=400, detail="E-Mail existiert nicht")
-
     if not verify_password(password, user.password_hash):
-        raise HTTPException(status_code=400, detail="Passwort falsch")
+        raise HTTPException(status_code=401, detail="Falsches Passwort")
 
-    token = create_token(user.id, user.role)
+    token = create_token({"user_id": user.id, "role": user.role})
 
-    return {"status": "ok", "token": token, "role": user.role}
-
-
-# -------------------------------
-# 👨‍✈️ ADMIN ERSTELLT FAHRER
-# -------------------------------
-@router.post("/register-driver")
-async def register_driver(request: Request):
-    data = await request.json()
-
-    email = data.get("email")
-    password = data.get("password")
-    vorname = data.get("vorname")
-    nachname = data.get("nachname")
-
-    db = SessionLocal()
-
-    # Prüfen ob User existiert
-    existing = db.query(User).filter(User.email == email).first()
-    if existing:
-        db.close()
-        raise HTTPException(status_code=400, detail="E-Mail bereits vergeben")
-
-    # USER anlegen
-    user = User(
-        email=email,
-        password_hash=hash_password(password),
-        role="driver"
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    # DRIVER Profil anlegen
-    driver = Driver(
-        user_id=user.id,
-        email=email,
-        vorname=vorname,
-        nachname=nachname
-    )
-    db.add(driver)
-    db.commit()
-    db.refresh(driver)
-
-    db.close()
-
-    return {"status": "ok", "message": "Fahrer wurde erstellt", "driver_id": driver.id}
-
-# -------------------------------
-# 🔍 AKTUELLEN USER ABFRAGEN (SEHR WICHTIG FÜR APP)
-# -------------------------------
-@router.get("/me")
-async def me(current_user=Depends(get_current_user)):
     return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "role": current_user.role
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role
+        }
     }
